@@ -196,7 +196,7 @@ private:
         this->showAllButton->Click += gcnew EventHandler(this, &MainForm::ShowAllButton_Click);
         
         this->refreshButton = gcnew Button();
-        this->refreshButton->Text = "Обновить";
+        this->refreshButton->Text = "Refresh";
         this->refreshButton->Location = Point(580, 20);
         this->refreshButton->Size = System::Drawing::Size(100, 25);
         this->refreshButton->Click += gcnew EventHandler(this, &MainForm::RefreshButton_Click);
@@ -444,10 +444,10 @@ private:
         if (manager->RefreshAndSortContacts()) {
             // Обновляем таблицу отсортированными записями
             RefreshDataGrid();
-            MessageBox::Show("Список контактов обновлен и отсортирован по ID.", "Информация", 
+            MessageBox::Show("Contact list has been updated and sorted by ID.", "Information", 
                 MessageBoxButtons::OK, MessageBoxIcon::Information);
         } else {
-            MessageBox::Show("Список контактов пуст. Нечего обновлять.", "Информация", 
+            MessageBox::Show("Contact list is empty. Nothing to update.", "Information", 
                 MessageBoxButtons::OK, MessageBoxIcon::Information);
         }
     }
