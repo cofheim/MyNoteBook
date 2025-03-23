@@ -299,7 +299,7 @@ public:
         try {
             Type^ excelType = Type::GetTypeFromProgID("Excel.Application");
             if (excelType == nullptr) {
-                throw gcnew Exception("Microsoft Excel не установлен на компьютере");
+                throw gcnew Exception("Microsoft Excel is not installed on this computer");
             }
 
             Object^ excelObj = Activator::CreateInstance(excelType);
@@ -311,7 +311,7 @@ public:
                 System::Reflection::BindingFlags::GetProperty, nullptr, workbook, nullptr);
 
             // Заголовки
-            array<String^>^ headers = {"ID", "Имя", "Фамилия", "Телефон", "Дата рождения", "Email", "Адрес", "Заметки"};
+            array<String^>^ headers = {"ID", "First Name", "Last Name", "Phone", "Birth Date", "Email", "Address", "Notes"};
             for (int i = 0; i < headers->Length; i++) {
                 Object^ cell = worksheet->GetType()->InvokeMember("Cells",
                     System::Reflection::BindingFlags::GetProperty, nullptr, worksheet,
@@ -372,7 +372,7 @@ public:
             System::Runtime::InteropServices::Marshal::ReleaseComObject(excelObj);
         }
         catch (Exception^ ex) {
-            throw gcnew Exception("Ошибка при экспорте в Excel: " + ex->Message);
+            throw gcnew Exception("Error exporting to Excel: " + ex->Message);
         }
     }
 }; 
