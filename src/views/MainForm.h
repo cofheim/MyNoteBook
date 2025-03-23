@@ -53,7 +53,13 @@ private:
     System::Windows::Forms::ToolStripMenuItem^ newFileMenuItem;
     System::Windows::Forms::ToolStripMenuItem^ openFileMenuItem;
     System::Windows::Forms::ToolStripMenuItem^ saveFileMenuItem;
+    System::Windows::Forms::ToolStripMenuItem^ exportMenu;
     System::Windows::Forms::ToolStripMenuItem^ exportExcelMenuItem;
+    System::Windows::Forms::ToolStripMenuItem^ exportExcelNewMenuItem;
+    System::Windows::Forms::ToolStripMenuItem^ exportExcelExistingMenuItem;
+    System::Windows::Forms::ToolStripMenuItem^ exportWordMenuItem;
+    System::Windows::Forms::ToolStripMenuItem^ exportWordNewMenuItem;
+    System::Windows::Forms::ToolStripMenuItem^ exportWordExistingMenuItem;
     System::Windows::Forms::ToolStripSeparator^ toolStripSeparator;
     System::Windows::Forms::ToolStripMenuItem^ exitMenuItem;
 
@@ -92,15 +98,37 @@ private:
         this->newFileMenuItem = gcnew ToolStripMenuItem("New");
         this->openFileMenuItem = gcnew ToolStripMenuItem("Open");
         this->saveFileMenuItem = gcnew ToolStripMenuItem("Save");
+        this->exportMenu = gcnew ToolStripMenuItem("Export");
         this->exportExcelMenuItem = gcnew ToolStripMenuItem("Export to Excel");
+        this->exportExcelNewMenuItem = gcnew ToolStripMenuItem("New File");
+        this->exportExcelExistingMenuItem = gcnew ToolStripMenuItem("Existing File");
+        this->exportWordMenuItem = gcnew ToolStripMenuItem("Export to Word");
+        this->exportWordNewMenuItem = gcnew ToolStripMenuItem("New File");
+        this->exportWordExistingMenuItem = gcnew ToolStripMenuItem("Existing File");
         this->toolStripSeparator = gcnew ToolStripSeparator();
         this->exitMenuItem = gcnew ToolStripMenuItem("Exit");
+
+        // Настраиваем подменю экспорта
+        this->exportExcelMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
+            this->exportExcelNewMenuItem,
+            this->exportExcelExistingMenuItem
+        });
+
+        this->exportWordMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
+            this->exportWordNewMenuItem,
+            this->exportWordExistingMenuItem
+        });
+
+        this->exportMenu->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(2) {
+            this->exportExcelMenuItem,
+            this->exportWordMenuItem
+        });
 
         this->fileMenu->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(6) {
             this->newFileMenuItem,
             this->openFileMenuItem,
             this->saveFileMenuItem,
-            this->exportExcelMenuItem,
+            this->exportMenu,
             this->toolStripSeparator,
             this->exitMenuItem
         });
@@ -280,7 +308,10 @@ private:
         this->newFileMenuItem->Click += gcnew EventHandler(this, &MainForm::NewFile_Click);
         this->openFileMenuItem->Click += gcnew EventHandler(this, &MainForm::OpenFile_Click);
         this->saveFileMenuItem->Click += gcnew EventHandler(this, &MainForm::SaveFile_Click);
-        this->exportExcelMenuItem->Click += gcnew EventHandler(this, &MainForm::ExportExcel_Click);
+        this->exportExcelNewMenuItem->Click += gcnew EventHandler(this, &MainForm::ExportExcel_Click);
+        this->exportExcelExistingMenuItem->Click += gcnew EventHandler(this, &MainForm::ExportExcel_Click);
+        this->exportWordNewMenuItem->Click += gcnew EventHandler(this, &MainForm::ExportWord_Click);
+        this->exportWordExistingMenuItem->Click += gcnew EventHandler(this, &MainForm::ExportWord_Click);
         this->exitMenuItem->Click += gcnew EventHandler(this, &MainForm::Exit_Click);
     }
 
@@ -449,13 +480,65 @@ private:
         saveFileDialog->Title = "Export to Excel";
         saveFileDialog->DefaultExt = "xlsx";
 
+        // Определяем, нужно ли добавлять в существующий файл
+        bool appendToExisting = false;
+        if (sender == exportExcelExistingMenuItem) {
+            appendToExisting = true;
+            saveFileDialog->Title = "Select existing Excel file";
+            saveFileDialog->CheckFileExists = true;
+        }
+
         if (saveFileDialog->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
             try {
-                manager->ExportToExcel(saveFileDialog->FileName);
-                MessageBox::Show("Export completed successfully!", "Information", MessageBoxButtons::OK, MessageBoxIcon::Information);
+                // Проверяем на существование файла при опции добавления
+                if (appendToExisting && !File::Exists(saveFileDialog->FileName)) {
+                    MessageBox::Show("The selected file does not exist.", "Error", 
+                        MessageBoxButtons::OK, MessageBoxIcon::Error);
+                    return;
+                }
+
+                manager->ExportToExcel(saveFileDialog->FileName, appendToExisting);
+                MessageBox::Show("Export completed successfully!", "Information", 
+                    MessageBoxButtons::OK, MessageBoxIcon::Information);
             }
             catch (Exception^ ex) {
-                MessageBox::Show("Export error: " + ex->Message, "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+                MessageBox::Show("Export error: " + ex->Message, "Error", 
+                    MessageBoxButtons::OK, MessageBoxIcon::Error);
+            }
+        }
+    }
+
+    System::Void ExportWord_Click(System::Object^ sender, System::EventArgs^ e)
+    {
+        SaveFileDialog^ saveFileDialog = gcnew SaveFileDialog();
+        saveFileDialog->Filter = "Word files (*.docx)|*.docx|All files (*.*)|*.*";
+        saveFileDialog->Title = "Export to Word";
+        saveFileDialog->DefaultExt = "docx";
+
+        // Определяем, нужно ли добавлять в существующий файл
+        bool appendToExisting = false;
+        if (sender == exportWordExistingMenuItem) {
+            appendToExisting = true;
+            saveFileDialog->Title = "Select existing Word file";
+            saveFileDialog->CheckFileExists = true;
+        }
+
+        if (saveFileDialog->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
+            try {
+                // Проверяем на существование файла при опции добавления
+                if (appendToExisting && !File::Exists(saveFileDialog->FileName)) {
+                    MessageBox::Show("The selected file does not exist.", "Error", 
+                        MessageBoxButtons::OK, MessageBoxIcon::Error);
+                    return;
+                }
+
+                manager->ExportToWord(saveFileDialog->FileName, appendToExisting);
+                MessageBox::Show("Export completed successfully!", "Information", 
+                    MessageBoxButtons::OK, MessageBoxIcon::Information);
+            }
+            catch (Exception^ ex) {
+                MessageBox::Show("Export error: " + ex->Message, "Error", 
+                    MessageBoxButtons::OK, MessageBoxIcon::Error);
             }
         }
     }

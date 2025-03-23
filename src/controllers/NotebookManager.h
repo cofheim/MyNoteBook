@@ -295,7 +295,7 @@ public:
     }
 
     // Экспорт в Excel
-    void ExportToExcel(String^ filePath) {
+    void ExportToExcel(String^ filePath, bool appendToExisting) {
         try {
             Type^ excelType = Type::GetTypeFromProgID("Excel.Application");
             if (excelType == nullptr) {
@@ -305,10 +305,47 @@ public:
             Object^ excelObj = Activator::CreateInstance(excelType);
             Object^ workbooks = excelType->InvokeMember("Workbooks", 
                 System::Reflection::BindingFlags::GetProperty, nullptr, excelObj, nullptr);
-            Object^ workbook = workbooks->GetType()->InvokeMember("Add",
-                System::Reflection::BindingFlags::InvokeMethod, nullptr, workbooks, nullptr);
-            Object^ worksheet = workbook->GetType()->InvokeMember("ActiveSheet",
+            
+            Object^ workbook = nullptr;
+            if (appendToExisting && File::Exists(filePath)) {
+                // Открываем существующий файл
+                workbook = workbooks->GetType()->InvokeMember("Open",
+                    System::Reflection::BindingFlags::InvokeMethod, nullptr, workbooks, 
+                    gcnew array<Object^> { filePath });
+            } else {
+                // Создаем новый файл
+                workbook = workbooks->GetType()->InvokeMember("Add",
+                    System::Reflection::BindingFlags::InvokeMethod, nullptr, workbooks, nullptr);
+            }
+            
+            // Добавляем новый лист в конец (если открыли существующий файл)
+            Object^ worksheets = workbook->GetType()->InvokeMember("Worksheets",
                 System::Reflection::BindingFlags::GetProperty, nullptr, workbook, nullptr);
+            
+            Object^ worksheet = nullptr;
+            if (appendToExisting && File::Exists(filePath)) {
+                int count = Convert::ToInt32(worksheets->GetType()->InvokeMember("Count",
+                    System::Reflection::BindingFlags::GetProperty, nullptr, worksheets, nullptr));
+                
+                // Получаем последний лист и добавляем после него новый
+                Object^ lastSheet = worksheets->GetType()->InvokeMember("Item",
+                    System::Reflection::BindingFlags::GetProperty, nullptr, worksheets, 
+                    gcnew array<Object^> { count });
+                
+                worksheet = worksheets->GetType()->InvokeMember("Add",
+                    System::Reflection::BindingFlags::InvokeMethod, nullptr, worksheets, 
+                    gcnew array<Object^> { System::Reflection::Missing::Value, lastSheet });
+                
+                // Задаем имя нового листа с текущей датой/временем
+                String^ sheetName = "Contacts " + DateTime::Now.ToString("yyyy-MM-dd HH:mm");
+                worksheet->GetType()->InvokeMember("Name",
+                    System::Reflection::BindingFlags::SetProperty, nullptr, worksheet,
+                    gcnew array<Object^> { sheetName });
+            } else {
+                // Используем активный лист в новом файле
+                worksheet = workbook->GetType()->InvokeMember("ActiveSheet",
+                    System::Reflection::BindingFlags::GetProperty, nullptr, workbook, nullptr);
+            }
 
             // Заголовки
             array<String^>^ headers = {"ID", "First Name", "Last Name", "Phone", "Birth Date", "Email", "Address", "Notes"};
@@ -355,9 +392,14 @@ public:
                 System::Reflection::BindingFlags::InvokeMethod, nullptr, columns, nullptr);
 
             // Сохранение
-            workbook->GetType()->InvokeMember("SaveAs",
-                System::Reflection::BindingFlags::InvokeMethod, nullptr, workbook,
-                gcnew array<Object^> { filePath });
+            if (!appendToExisting || !File::Exists(filePath)) {
+                workbook->GetType()->InvokeMember("SaveAs",
+                    System::Reflection::BindingFlags::InvokeMethod, nullptr, workbook,
+                    gcnew array<Object^> { filePath });
+            } else {
+                workbook->GetType()->InvokeMember("Save",
+                    System::Reflection::BindingFlags::InvokeMethod, nullptr, workbook, nullptr);
+            }
 
             // Закрытие
             workbook->GetType()->InvokeMember("Close",
@@ -374,5 +416,205 @@ public:
         catch (Exception^ ex) {
             throw gcnew Exception("Error exporting to Excel: " + ex->Message);
         }
+    }
+    
+    // Перегрузка для обратной совместимости
+    void ExportToExcel(String^ filePath) {
+        ExportToExcel(filePath, false);
+    }
+    
+    // Экспорт в Word
+    void ExportToWord(String^ filePath, bool appendToExisting) {
+        try {
+            Type^ wordType = Type::GetTypeFromProgID("Word.Application");
+            if (wordType == nullptr) {
+                throw gcnew Exception("Microsoft Word is not installed on this computer");
+            }
+
+            Object^ wordObj = Activator::CreateInstance(wordType);
+            Object^ documents = wordType->InvokeMember("Documents", 
+                System::Reflection::BindingFlags::GetProperty, nullptr, wordObj, nullptr);
+            
+            Object^ document = nullptr;
+            if (appendToExisting && File::Exists(filePath)) {
+                // Открываем существующий документ
+                document = documents->GetType()->InvokeMember("Open",
+                    System::Reflection::BindingFlags::InvokeMethod, nullptr, documents, 
+                    gcnew array<Object^> { filePath });
+                
+                // Перемещаем курсор в конец документа
+                Object^ selection = wordType->InvokeMember("Selection",
+                    System::Reflection::BindingFlags::GetProperty, nullptr, wordObj, nullptr);
+                    
+                selection->GetType()->InvokeMember("EndKey",
+                    System::Reflection::BindingFlags::InvokeMethod, nullptr, selection,
+                    gcnew array<Object^> { 6 });  // wdStory = 6
+                
+                // Добавляем разрыв страницы
+                selection->GetType()->InvokeMember("InsertBreak",
+                    System::Reflection::BindingFlags::InvokeMethod, nullptr, selection,
+                    gcnew array<Object^> { 7 });  // wdPageBreak = 7
+            } else {
+                // Создаем новый документ
+                document = documents->GetType()->InvokeMember("Add",
+                    System::Reflection::BindingFlags::InvokeMethod, nullptr, documents, nullptr);
+            }
+            
+            // Получаем объект selection для работы с документом
+            Object^ selection = wordType->InvokeMember("Selection",
+                System::Reflection::BindingFlags::GetProperty, nullptr, wordObj, nullptr);
+            
+            // Добавляем заголовок
+            selection->GetType()->InvokeMember("Font",
+                System::Reflection::BindingFlags::GetProperty, nullptr, selection, nullptr)
+                ->GetType()->InvokeMember("Size",
+                    System::Reflection::BindingFlags::SetProperty, nullptr, 
+                    selection->GetType()->InvokeMember("Font",
+                        System::Reflection::BindingFlags::GetProperty, nullptr, selection, nullptr),
+                    gcnew array<Object^> { 16 });
+                    
+            selection->GetType()->InvokeMember("TypeText",
+                System::Reflection::BindingFlags::InvokeMethod, nullptr, selection,
+                gcnew array<Object^> { "Contacts List" });
+                
+            selection->GetType()->InvokeMember("TypeParagraph",
+                System::Reflection::BindingFlags::InvokeMethod, nullptr, selection, nullptr);
+                
+            selection->GetType()->InvokeMember("TypeParagraph",
+                System::Reflection::BindingFlags::InvokeMethod, nullptr, selection, nullptr);
+            
+            // Добавляем текущую дату
+            selection->GetType()->InvokeMember("Font",
+                System::Reflection::BindingFlags::GetProperty, nullptr, selection, nullptr)
+                ->GetType()->InvokeMember("Size",
+                    System::Reflection::BindingFlags::SetProperty, nullptr, 
+                    selection->GetType()->InvokeMember("Font",
+                        System::Reflection::BindingFlags::GetProperty, nullptr, selection, nullptr),
+                    gcnew array<Object^> { 10 });
+                    
+            selection->GetType()->InvokeMember("TypeText",
+                System::Reflection::BindingFlags::InvokeMethod, nullptr, selection,
+                gcnew array<Object^> { "Generated: " + DateTime::Now.ToString() });
+                
+            selection->GetType()->InvokeMember("TypeParagraph",
+                System::Reflection::BindingFlags::InvokeMethod, nullptr, selection, nullptr);
+                
+            selection->GetType()->InvokeMember("TypeParagraph",
+                System::Reflection::BindingFlags::InvokeMethod, nullptr, selection, nullptr);
+            
+            // Получаем доступ к таблицам в документе
+            Object^ tables = document->GetType()->InvokeMember("Tables",
+                System::Reflection::BindingFlags::GetProperty, nullptr, document, nullptr);
+            
+            // Добавляем таблицу (8 колонок, строк по числу контактов + 1 для заголовка)
+            Object^ table = tables->GetType()->InvokeMember("Add",
+                System::Reflection::BindingFlags::InvokeMethod, nullptr, tables,
+                gcnew array<Object^> { 
+                    selection->GetType()->InvokeMember("Range",
+                        System::Reflection::BindingFlags::GetProperty, nullptr, selection, nullptr),
+                    entries->Count + 1, 8, 1, 1 });
+            
+            // Заголовки
+            array<String^>^ headers = {"ID", "First Name", "Last Name", "Phone", "Birth Date", "Email", "Address", "Notes"};
+            Object^ headerRow = table->GetType()->InvokeMember("Rows",
+                System::Reflection::BindingFlags::GetProperty, nullptr, table, nullptr)
+                ->GetType()->InvokeMember("Item",
+                    System::Reflection::BindingFlags::GetProperty, nullptr, 
+                    table->GetType()->InvokeMember("Rows",
+                        System::Reflection::BindingFlags::GetProperty, nullptr, table, nullptr),
+                    gcnew array<Object^> { 1 });
+            
+            // Устанавливаем фон для заголовка
+            headerRow->GetType()->InvokeMember("Shading",
+                System::Reflection::BindingFlags::GetProperty, nullptr, headerRow, nullptr)
+                ->GetType()->InvokeMember("BackgroundPatternColor",
+                    System::Reflection::BindingFlags::SetProperty, nullptr,
+                    headerRow->GetType()->InvokeMember("Shading",
+                        System::Reflection::BindingFlags::GetProperty, nullptr, headerRow, nullptr),
+                    gcnew array<Object^> { 16777215 });  // wdColorGray15 или светло-серый
+            
+            // Заполняем заголовки
+            for (int i = 0; i < headers->Length; i++) {
+                Object^ cell = table->GetType()->InvokeMember("Cell",
+                    System::Reflection::BindingFlags::InvokeMethod, nullptr, table,
+                    gcnew array<Object^> { 1, i + 1 });
+                    
+                cell->GetType()->InvokeMember("Range",
+                    System::Reflection::BindingFlags::GetProperty, nullptr, cell, nullptr)
+                    ->GetType()->InvokeMember("Text",
+                        System::Reflection::BindingFlags::SetProperty, nullptr,
+                        cell->GetType()->InvokeMember("Range",
+                            System::Reflection::BindingFlags::GetProperty, nullptr, cell, nullptr),
+                        gcnew array<Object^> { headers[i] });
+            }
+            
+            // Заполняем данные
+            int row = 2;
+            for each (NotebookEntry<int>^ entry in entries) {
+                array<Object^>^ rowData = {
+                    entry->GetId().ToString(),
+                    entry->GetFirstName(),
+                    entry->GetLastName(),
+                    entry->GetPhoneNumber(),
+                    entry->GetBirthDate(),
+                    entry->GetEmail(),
+                    entry->GetAddress(),
+                    entry->GetNotes()
+                };
+
+                for (int col = 0; col < rowData->Length; col++) {
+                    Object^ cell = table->GetType()->InvokeMember("Cell",
+                        System::Reflection::BindingFlags::InvokeMethod, nullptr, table,
+                        gcnew array<Object^> { row, col + 1 });
+                        
+                    cell->GetType()->InvokeMember("Range",
+                        System::Reflection::BindingFlags::GetProperty, nullptr, cell, nullptr)
+                        ->GetType()->InvokeMember("Text",
+                            System::Reflection::BindingFlags::SetProperty, nullptr,
+                            cell->GetType()->InvokeMember("Range",
+                                System::Reflection::BindingFlags::GetProperty, nullptr, cell, nullptr),
+                            gcnew array<Object^> { rowData[col] });
+                }
+                row++;
+            }
+            
+            // Автоподбор таблицы
+            table->GetType()->InvokeMember("AutoFitBehavior",
+                System::Reflection::BindingFlags::InvokeMethod, nullptr, table,
+                gcnew array<Object^> { 1 });  // wdAutoFitContent = 1
+            
+            // Перемещаем курсор после таблицы
+            selection->GetType()->InvokeMember("MoveDown",
+                System::Reflection::BindingFlags::InvokeMethod, nullptr, selection, nullptr);
+            
+            // Сохранение
+            if (!appendToExisting || !File::Exists(filePath)) {
+                document->GetType()->InvokeMember("SaveAs",
+                    System::Reflection::BindingFlags::InvokeMethod, nullptr, document,
+                    gcnew array<Object^> { filePath });
+            } else {
+                document->GetType()->InvokeMember("Save",
+                    System::Reflection::BindingFlags::InvokeMethod, nullptr, document, nullptr);
+            }
+
+            // Закрытие
+            document->GetType()->InvokeMember("Close",
+                System::Reflection::BindingFlags::InvokeMethod, nullptr, document,
+                gcnew array<Object^> { true });
+            wordType->InvokeMember("Quit",
+                System::Reflection::BindingFlags::InvokeMethod, nullptr, wordObj, nullptr);
+
+            System::Runtime::InteropServices::Marshal::ReleaseComObject(document);
+            System::Runtime::InteropServices::Marshal::ReleaseComObject(documents);
+            System::Runtime::InteropServices::Marshal::ReleaseComObject(wordObj);
+        }
+        catch (Exception^ ex) {
+            throw gcnew Exception("Error exporting to Word: " + ex->Message);
+        }
+    }
+    
+    // Перегрузка для обратной совместимости
+    void ExportToWord(String^ filePath) {
+        ExportToWord(filePath, false);
     }
 }; 
