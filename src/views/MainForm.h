@@ -24,7 +24,10 @@ public:
         
         // Инициализация менеджера записей
         manager = gcnew NotebookManager();
-        currentId = 1;
+        
+        // Установим начальный ID
+        // Если в списке уже есть записи (загруженные из JSON), используем максимальный ID + 1
+        currentId = manager->GetMaxId() + 1;
         
         // Настройка обработчиков ввода
         SetupInputHandlers();
@@ -441,14 +444,16 @@ private:
     System::Void OpenFile_Click(System::Object^ sender, System::EventArgs^ e)
     {
         OpenFileDialog^ openFileDialog = gcnew OpenFileDialog();
-        openFileDialog->Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+        openFileDialog->Filter = "Text files (*.txt)|*.txt|JSON files (*.json)|*.json|All files (*.*)|*.*";
         openFileDialog->Title = "Open File";
 
         if (openFileDialog->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
             try {
                 manager->LoadFromFile(openFileDialog->FileName);
                 RefreshDataGrid();
-                currentId = manager->GetAllEntries()->Count + 1;
+                
+                // Обновляем currentId на максимальный ID + 1
+                currentId = manager->GetMaxId() + 1;
             }
             catch (Exception^ ex) {
                 MessageBox::Show(ex->Message, "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
@@ -459,13 +464,15 @@ private:
     System::Void SaveFile_Click(System::Object^ sender, System::EventArgs^ e)
     {
         SaveFileDialog^ saveFileDialog = gcnew SaveFileDialog();
-        saveFileDialog->Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+        saveFileDialog->Filter = "JSON files (*.json)|*.json|Text files (*.txt)|*.txt|All files (*.*)|*.*";
         saveFileDialog->Title = "Save File";
-        saveFileDialog->DefaultExt = "txt";
+        saveFileDialog->DefaultExt = "json";
 
         if (saveFileDialog->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
             try {
                 manager->SaveToFile(saveFileDialog->FileName);
+                MessageBox::Show("File saved successfully!", "Information", 
+                    MessageBoxButtons::OK, MessageBoxIcon::Information);
             }
             catch (Exception^ ex) {
                 MessageBox::Show(ex->Message, "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);

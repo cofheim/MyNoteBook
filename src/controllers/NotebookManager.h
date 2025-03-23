@@ -617,4 +617,15 @@ public:
     void ExportToWord(String^ filePath) {
         ExportToWord(filePath, false);
     }
+
+    // Получение максимального ID
+    int GetMaxId() {
+        int maxId = 0;
+        for each (NotebookEntry<int>^ entry in entries) {
+            if (entry->GetId() > maxId) {
+                maxId = entry->GetId();
+            }
+        }
+        return maxId;
+    }
 }; 
