@@ -32,7 +32,7 @@ private:
         }
     };
 
-    // Вспомогательный класс для сравнения при сортировке
+    // Вспомогательный класс для сравнения при сортировке по фамилии
     ref class LastNameComparer : IComparer<NotebookEntry<int>^> {
     private:
         bool ascending;
@@ -43,6 +43,20 @@ private:
                 return String::Compare(x->GetLastName(), y->GetLastName());
             }
             return String::Compare(y->GetLastName(), x->GetLastName());
+        }
+    };
+
+    // Вспомогательный класс для сравнения при сортировке по имени
+    ref class FirstNameComparer : IComparer<NotebookEntry<int>^> {
+    private:
+        bool ascending;
+    public:
+        FirstNameComparer(bool asc) : ascending(asc) {}
+        virtual int Compare(NotebookEntry<int>^ x, NotebookEntry<int>^ y) {
+            if (ascending) {
+                return String::Compare(x->GetFirstName(), y->GetFirstName());
+            }
+            return String::Compare(y->GetFirstName(), x->GetFirstName());
         }
     };
 
@@ -178,6 +192,12 @@ public:
     // Сортировка по фамилии
     void SortByLastName(bool ascending) {
         LastNameComparer^ comparer = gcnew LastNameComparer(ascending);
+        entries->Sort(comparer);
+    }
+    
+    // Сортировка по имени
+    void SortByFirstName(bool ascending) {
+        FirstNameComparer^ comparer = gcnew FirstNameComparer(ascending);
         entries->Sort(comparer);
     }
     

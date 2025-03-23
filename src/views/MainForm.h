@@ -71,6 +71,11 @@ private:
     System::Windows::Forms::Button^ showAllButton;
     System::Windows::Forms::Button^ refreshButton;
 
+    // Кнопки сортировки
+    System::Windows::Forms::GroupBox^ sortGroupBox;
+    System::Windows::Forms::Button^ sortByFirstNameButton;
+    System::Windows::Forms::Button^ sortByLastNameButton;
+
     System::Windows::Forms::GroupBox^ addEntryGroupBox;
     System::Windows::Forms::TextBox^ firstNameTextBox;
     System::Windows::Forms::TextBox^ lastNameTextBox;
@@ -189,6 +194,27 @@ private:
         this->refreshButton->Size = System::Drawing::Size(100, 25);
         this->refreshButton->Click += gcnew EventHandler(this, &MainForm::RefreshButton_Click);
 
+        // Инициализация группы сортировки
+        this->sortGroupBox = gcnew GroupBox();
+        this->sortGroupBox->Text = "Sort";
+        this->sortGroupBox->Location = Point(820, 30);
+        this->sortGroupBox->Size = System::Drawing::Size(180, 60);
+        
+        this->sortByFirstNameButton = gcnew Button();
+        this->sortByFirstNameButton->Text = "By First Name";
+        this->sortByFirstNameButton->Location = Point(10, 20);
+        this->sortByFirstNameButton->Size = System::Drawing::Size(80, 25);
+        this->sortByFirstNameButton->Click += gcnew EventHandler(this, &MainForm::SortByFirstNameButton_Click);
+        
+        this->sortByLastNameButton = gcnew Button();
+        this->sortByLastNameButton->Text = "By Last Name";
+        this->sortByLastNameButton->Location = Point(100, 20);
+        this->sortByLastNameButton->Size = System::Drawing::Size(70, 25);
+        this->sortByLastNameButton->Click += gcnew EventHandler(this, &MainForm::SortByLastNameButton_Click);
+        
+        this->sortGroupBox->Controls->Add(this->sortByFirstNameButton);
+        this->sortGroupBox->Controls->Add(this->sortByLastNameButton);
+
         // Инициализация группы добавления записи
         this->addEntryGroupBox = gcnew GroupBox();
         this->addEntryGroupBox->Text = "Add Entry";
@@ -276,6 +302,7 @@ private:
         this->Controls->Add(this->menuStrip);
         this->Controls->Add(this->dataGridView);
         this->Controls->Add(this->searchGroupBox);
+        this->Controls->Add(this->sortGroupBox);
         this->Controls->Add(this->addEntryGroupBox);
 
         // Добавление элементов в группу поиска
@@ -435,6 +462,34 @@ private:
         } else {
             MessageBox::Show("Contact list is empty. Nothing to update.", "Information", 
                 MessageBoxButtons::OK, MessageBoxIcon::Information);
+        }
+    }
+
+    System::Void SortByFirstNameButton_Click(System::Object^ sender, System::EventArgs^ e)
+    {
+        try {
+            manager->SortByFirstName(true); // Сортировка от А до Я
+            RefreshDataGrid();
+            MessageBox::Show("Contacts sorted by first name", "Information", 
+                MessageBoxButtons::OK, MessageBoxIcon::Information);
+        }
+        catch (Exception^ ex) {
+            MessageBox::Show("Error sorting contacts: " + ex->Message, "Error", 
+                MessageBoxButtons::OK, MessageBoxIcon::Error);
+        }
+    }
+    
+    System::Void SortByLastNameButton_Click(System::Object^ sender, System::EventArgs^ e)
+    {
+        try {
+            manager->SortByLastName(true); // Сортировка от А до Я
+            RefreshDataGrid();
+            MessageBox::Show("Contacts sorted by last name", "Information", 
+                MessageBoxButtons::OK, MessageBoxIcon::Information);
+        }
+        catch (Exception^ ex) {
+            MessageBox::Show("Error sorting contacts: " + ex->Message, "Error", 
+                MessageBoxButtons::OK, MessageBoxIcon::Error);
         }
     }
 
