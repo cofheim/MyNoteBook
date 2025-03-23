@@ -1,53 +1,53 @@
 # MyNoteBook
 
-A simple contact management application created using C++ and Windows Forms.
+Простое приложение для управления контактами, созданное с использованием C++ и Windows Forms.
 
-## Features
+## Возможности
 
-- Adding, editing and deleting contacts
-- Search for contacts by various criteria:
-  - First Name
-  - Last Name
-  - Phone number
+- Добавление, редактирование и удаление контактов
+- Поиск контактов по различным критериям:
+  - Имя
+  - Фамилия
+  - Номер телефона
   - Email
-  - Address
-- Export contacts:
-  - To Excel (new or existing file)
-- Save and load contacts from files
-- **JSON format support** for storing contacts
-  - Automatic loading of contacts from JSON
-  - Improved data storage
-  - Better compatibility with modern applications
+  - Адрес
+- Экспорт контактов:
+  - В Excel (новый или существующий файл)
+- Сохранение и загрузка контактов из файлов
+- **Поддержка формата JSON** для хранения контактов
+  - Автоматическая загрузка контактов из JSON
+  - Улучшенное сохранение данных
+  - Лучшая совместимость с современными приложениями
 
-## Requirements
+## Требования
 
 - Windows OS
-- Visual Studio 2019 or newer
+- Visual Studio 2019 или новее
 - .NET Framework 4.8
-- Newtonsoft.Json library (included)
-- Microsoft Excel (for Excel export functions)
+- Библиотека Newtonsoft.Json (включена)
+- Microsoft Excel (для функций экспорта в Excel)
 
-## Build Instructions
+## Инструкции по сборке
 
-1. Open `NBapp.sln` in Visual Studio
-2. Build the solution (Ctrl+Shift+B)
-3. Run the application (F5)
+1. Откройте `NBapp.sln` в Visual Studio
+2. Соберите решение (Ctrl+Shift+B)
+3. Запустите приложение (F5)
 
-## JSON Support
+## Поддержка JSON
 
-The application uses JSON as the default format for storing contacts. At startup, the application automatically looks for the `contacts.json` file in the application directory and loads contacts from it. When adding or removing contacts, changes are automatically saved to this file.
+Приложение использует JSON как формат по умолчанию для хранения контактов. При запуске приложение автоматически ищет файл `contacts.json` в директории приложения и загружает контакты из него. При добавлении или удалении контактов изменения автоматически сохраняются в этот файл.
 
-## Export Features
+## Возможности экспорта
 
-### Export to Excel
-Allows you to export the list of contacts to:
-- New Excel file (.xlsx)
-- Existing Excel file (as a new sheet)
+### Экспорт в Excel
+Позволяет экспортировать список контактов в:
+- Новый файл Excel (.xlsx)
+- Существующий файл Excel (как новый лист)
 
-## Screenshots
+## Скриншоты
 
-[Add screenshots here]
+[Добавьте скриншоты здесь]
 
-## License
+## Лицензия
 
-[License information] 
+[Информация о лицензии] 

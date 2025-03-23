@@ -400,7 +400,12 @@ public:
                 worksheet->Cells[row, 1] = entry->GetId();
                 worksheet->Cells[row, 2] = entry->GetFirstName();
                 worksheet->Cells[row, 3] = entry->GetLastName();
-                worksheet->Cells[row, 4] = entry->GetPhoneNumber();
+                
+                // Установим формат ячейки с телефоном как текстовый перед вставкой данных
+                Microsoft::Office::Interop::Excel::Range^ phoneCell = safe_cast<Microsoft::Office::Interop::Excel::Range^>(worksheet->Cells[row, 4]);
+                phoneCell->NumberFormat = "@"; // Установка текстового формата
+                phoneCell->Value2 = entry->GetPhoneNumber(); // Используем Value2 вместо простого присваивания
+                
                 worksheet->Cells[row, 5] = entry->GetBirthDate();
                 worksheet->Cells[row, 6] = entry->GetEmail();
                 worksheet->Cells[row, 7] = entry->GetAddress();
