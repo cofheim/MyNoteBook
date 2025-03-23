@@ -69,7 +69,6 @@ private:
     System::Windows::Forms::ComboBox^ searchTypeComboBox;
     System::Windows::Forms::Button^ searchButton;
     System::Windows::Forms::Button^ showAllButton;
-    System::Windows::Forms::Button^ refreshButton;
 
     // Кнопки сортировки
     System::Windows::Forms::GroupBox^ sortGroupBox;
@@ -97,6 +96,7 @@ private:
         this->Padding = System::Windows::Forms::Padding(0);
         this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
         this->Font = gcnew System::Drawing::Font("Microsoft Sans Serif", 9);
+        this->AutoScroll = true;
 
         // Инициализация меню
         this->menuStrip = gcnew MenuStrip();
@@ -143,6 +143,8 @@ private:
         this->dataGridView->MultiSelect = false;
         this->dataGridView->SelectionMode = DataGridViewSelectionMode::FullRowSelect;
         this->dataGridView->AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode::Fill;
+        this->dataGridView->Anchor = static_cast<AnchorStyles>(AnchorStyles::Top | AnchorStyles::Left | AnchorStyles::Right | AnchorStyles::Bottom);
+        this->dataGridView->ScrollBars = ScrollBars::Both;
 
         // Добавление столбцов
         this->dataGridView->Columns->Add("Id", "ID");
@@ -159,6 +161,7 @@ private:
         this->searchGroupBox->Text = "Search";
         this->searchGroupBox->Location = Point(10, 30);
         this->searchGroupBox->Size = System::Drawing::Size(800, 60);
+        this->searchGroupBox->Anchor = static_cast<AnchorStyles>(AnchorStyles::Top | AnchorStyles::Left | AnchorStyles::Right);
 
         this->searchTypeComboBox = gcnew ComboBox();
         this->searchTypeComboBox->Location = Point(10, 20);
@@ -174,7 +177,7 @@ private:
 
         this->searchTextBox = gcnew TextBox();
         this->searchTextBox->Location = Point(170, 20);
-        this->searchTextBox->Size = System::Drawing::Size(400, 25);
+        this->searchTextBox->Size = System::Drawing::Size(290, 25);
 
         this->searchButton = gcnew Button();
         this->searchButton->Text = "Search";
@@ -184,21 +187,16 @@ private:
         
         this->showAllButton = gcnew Button();
         this->showAllButton->Text = "Show All";
-        this->showAllButton->Location = Point(690, 20);
+        this->showAllButton->Location = Point(580, 20);
         this->showAllButton->Size = System::Drawing::Size(100, 25);
         this->showAllButton->Click += gcnew EventHandler(this, &MainForm::ShowAllButton_Click);
-        
-        this->refreshButton = gcnew Button();
-        this->refreshButton->Text = "Refresh";
-        this->refreshButton->Location = Point(580, 20);
-        this->refreshButton->Size = System::Drawing::Size(100, 25);
-        this->refreshButton->Click += gcnew EventHandler(this, &MainForm::RefreshButton_Click);
 
         // Инициализация группы сортировки
         this->sortGroupBox = gcnew GroupBox();
         this->sortGroupBox->Text = "Sort";
         this->sortGroupBox->Location = Point(820, 30);
         this->sortGroupBox->Size = System::Drawing::Size(180, 60);
+        this->sortGroupBox->Anchor = static_cast<AnchorStyles>(AnchorStyles::Top | AnchorStyles::Right);
         
         this->sortByFirstNameButton = gcnew Button();
         this->sortByFirstNameButton->Text = "By First Name";
@@ -220,6 +218,7 @@ private:
         this->addEntryGroupBox->Text = "Add Entry";
         this->addEntryGroupBox->Location = Point(10, 510);
         this->addEntryGroupBox->Size = System::Drawing::Size(800, 200);
+        this->addEntryGroupBox->Anchor = static_cast<AnchorStyles>(AnchorStyles::Bottom | AnchorStyles::Left | AnchorStyles::Right);
 
         // Создание меток и полей ввода
         Label^ firstNameLabel = gcnew Label();
@@ -310,7 +309,6 @@ private:
         this->searchGroupBox->Controls->Add(this->searchTextBox);
         this->searchGroupBox->Controls->Add(this->searchButton);
         this->searchGroupBox->Controls->Add(this->showAllButton);
-        this->searchGroupBox->Controls->Add(this->refreshButton);
 
         // Добавление элементов в группу добавления записи
         this->addEntryGroupBox->Controls->Add(firstNameLabel);
@@ -449,20 +447,6 @@ private:
         
         // Обновляем таблицу всеми записями
         RefreshDataGrid();
-    }
-
-    System::Void RefreshButton_Click(System::Object^ sender, System::EventArgs^ e)
-    {
-        // Обновляем и сортируем контакты, если они есть
-        if (manager->RefreshAndSortContacts()) {
-            // Обновляем таблицу отсортированными записями
-            RefreshDataGrid();
-            MessageBox::Show("Contact list has been updated and sorted by ID.", "Information", 
-                MessageBoxButtons::OK, MessageBoxIcon::Information);
-        } else {
-            MessageBox::Show("Contact list is empty. Nothing to update.", "Information", 
-                MessageBoxButtons::OK, MessageBoxIcon::Information);
-        }
     }
 
     System::Void SortByFirstNameButton_Click(System::Object^ sender, System::EventArgs^ e)

@@ -74,6 +74,20 @@ public:
         entries = gcnew List<NotebookEntry<int>^>();
         currentFilePath = defaultJsonPath;
         
+        // Создаем пустой JSON файл, если он не существует
+        if (!File::Exists(defaultJsonPath)) {
+            try {
+                // Создаем пустой список в формате JSON
+                File::WriteAllText(defaultJsonPath, "[]", gcnew UTF8Encoding(true));
+            }
+            catch (Exception^ ex) {
+                // Игнорируем ошибку, если не удалось создать файл
+                // Будем использовать пустой список в памяти
+                entries = gcnew List<NotebookEntry<int>^>();
+                return;
+            }
+        }
+        
         // Автоматически загружаем контакты из JSON файла при запуске, если он существует
         if (File::Exists(defaultJsonPath)) {
             try {
@@ -243,12 +257,25 @@ public:
                 // Читаем JSON из файла
                 String^ json = File::ReadAllText(filePath, gcnew UTF8Encoding(true));
                 
-                // Десериализуем JSON в список записей
-                entries = JsonConvert::DeserializeObject<List<NotebookEntry<int>^>^>(json);
-                if (entries == nullptr) {
+                // Проверяем, не пустой ли файл
+                if (String::IsNullOrWhiteSpace(json)) {
                     entries = gcnew List<NotebookEntry<int>^>();
+                    return;
                 }
-                currentFilePath = filePath;
+                
+                // Десериализуем JSON в список записей
+                try {
+                    entries = JsonConvert::DeserializeObject<List<NotebookEntry<int>^>^>(json);
+                    if (entries == nullptr) {
+                        entries = gcnew List<NotebookEntry<int>^>();
+                    }
+                    currentFilePath = filePath;
+                }
+                catch (Exception^ jsonEx) {
+                    // Если ошибка десериализации, создаем новый список
+                    entries = gcnew List<NotebookEntry<int>^>();
+                    throw gcnew Exception("Error parsing JSON: " + jsonEx->Message);
+                }
             }
             else {
                 throw gcnew Exception("File does not exist: " + filePath);
