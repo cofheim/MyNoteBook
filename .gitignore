@@ -15,6 +15,13 @@ bld/
 [Bb]in/
 [Oo]bj/
 
+# NuGet Packages
+packages/*
+!packages/repositories.config
+!packages/build/
+!packages/*/build/
+!packages.config
+
 # Visual C++ cache files
 ipch/
 *.aps
@@ -58,4 +65,22 @@ ipch/
 
 # Others
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Compiled files
+*.dll
+*.exe
+*.pdb
+*.ipdb
+*.iobj
+
+# Other
+*.tmp
+*.temp 

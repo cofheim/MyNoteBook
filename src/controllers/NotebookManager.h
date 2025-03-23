@@ -8,12 +8,14 @@ using namespace System::Collections::Generic;
 using namespace System::Windows::Forms;
 using namespace System::Text;
 using namespace System::IO;
+using namespace Newtonsoft::Json;
 
 public ref class NotebookManager {
 private:
     List<NotebookEntry<int>^>^ entries;
     String^ currentFilePath;
     static Encoding^ fileEncoding = Encoding::UTF8;
+    String^ defaultJsonPath = "contacts.json";
 
     // Вспомогательный класс для предиката удаления
     ref class RemoveEntryPredicate {
@@ -44,23 +46,41 @@ public:
     // Конструктор
     NotebookManager() {
         entries = gcnew List<NotebookEntry<int>^>();
-        currentFilePath = "";
+        currentFilePath = defaultJsonPath;
+        
+        // Автоматически загружаем контакты из JSON файла при запуске, если он существует
+        if (File::Exists(defaultJsonPath)) {
+            try {
+                LoadFromJsonFile(defaultJsonPath);
+            }
+            catch (...) {
+                // Если не удалось загрузить - создаем пустой список
+                entries = gcnew List<NotebookEntry<int>^>();
+            }
+        }
     }
 
     // Добавление новой записи
     void AddEntry(NotebookEntry<int>^ entry) {
         if (entry->IsValid()) {
             entries->Add(entry);
+            // Автоматически сохраняем в JSON после добавления
+            SaveToJsonFile(defaultJsonPath);
         }
         else {
-            throw gcnew Exception("Недопустимая запись: обязательные поля должны быть заполнены");
+            throw gcnew Exception("Invalid entry: required fields must be filled");
         }
     }
 
     // Удаление записи по ID
     bool RemoveEntry(int id) {
         RemoveEntryPredicate^ predicate = gcnew RemoveEntryPredicate(id);
-        return entries->RemoveAll(gcnew Predicate<NotebookEntry<int>^>(predicate, &RemoveEntryPredicate::Match)) > 0;
+        bool result = entries->RemoveAll(gcnew Predicate<NotebookEntry<int>^>(predicate, &RemoveEntryPredicate::Match)) > 0;
+        if (result) {
+            // Автоматически сохраняем в JSON после удаления
+            SaveToJsonFile(defaultJsonPath);
+        }
+        return result;
     }
 
     // Получение всех записей
@@ -148,9 +168,54 @@ public:
         LastNameComparer^ comparer = gcnew LastNameComparer(ascending);
         entries->Sort(comparer);
     }
+    
+    // Сохранение в JSON файл
+    void SaveToJsonFile(String^ filePath) {
+        try {
+            // Преобразуем список записей в JSON
+            String^ json = JsonConvert::SerializeObject(entries, Formatting::Indented);
+            
+            // Записываем JSON в файл
+            File::WriteAllText(filePath, json, gcnew UTF8Encoding(true));
+            currentFilePath = filePath;
+        }
+        catch (Exception^ ex) {
+            throw gcnew Exception("Error saving to JSON file: " + ex->Message);
+        }
+    }
+    
+    // Загрузка из JSON файла
+    void LoadFromJsonFile(String^ filePath) {
+        try {
+            if (File::Exists(filePath)) {
+                // Читаем JSON из файла
+                String^ json = File::ReadAllText(filePath, gcnew UTF8Encoding(true));
+                
+                // Десериализуем JSON в список записей
+                entries = JsonConvert::DeserializeObject<List<NotebookEntry<int>^>^>(json);
+                if (entries == nullptr) {
+                    entries = gcnew List<NotebookEntry<int>^>();
+                }
+                currentFilePath = filePath;
+            }
+            else {
+                throw gcnew Exception("File does not exist: " + filePath);
+            }
+        }
+        catch (Exception^ ex) {
+            throw gcnew Exception("Error loading from JSON file: " + ex->Message);
+        }
+    }
 
-    // Сохранение в файл
+    // Сохранение в файл (для совместимости)
     void SaveToFile(String^ filePath) {
+        // Если файл имеет расширение .json, используем JSON формат
+        if (filePath->EndsWith(".json", StringComparison::OrdinalIgnoreCase)) {
+            SaveToJsonFile(filePath);
+            return;
+        }
+        
+        // Иначе используем старый текстовый формат
         try {
             StreamWriter^ writer = nullptr;
             try {
@@ -178,12 +243,19 @@ public:
             }
         }
         catch (Exception^ ex) {
-            throw gcnew Exception("Ошибка при сохранении файла: " + ex->Message);
+            throw gcnew Exception("Error saving file: " + ex->Message);
         }
     }
 
-    // Загрузка из файла
+    // Загрузка из файла (для совместимости)
     void LoadFromFile(String^ filePath) {
+        // Если файл имеет расширение .json, используем JSON формат
+        if (filePath->EndsWith(".json", StringComparison::OrdinalIgnoreCase)) {
+            LoadFromJsonFile(filePath);
+            return;
+        }
+        
+        // Иначе используем старый текстовый формат
         try {
             StreamReader^ reader = nullptr;
             try {
@@ -218,7 +290,7 @@ public:
             }
         }
         catch (Exception^ ex) {
-            throw gcnew Exception("Ошибка при загрузке файла: " + ex->Message);
+            throw gcnew Exception("Error loading file: " + ex->Message);
         }
     }
 

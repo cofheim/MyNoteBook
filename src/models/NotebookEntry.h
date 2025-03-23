@@ -3,18 +3,34 @@
 #include <msclr\marshal_cppstd.h>
 
 using namespace System;
+using namespace Newtonsoft::Json;
 
 // Шаблонный класс для хранения записи в записной книжке
 template<typename T>
 public ref class NotebookEntry {
 private:
+    [JsonProperty("id")]
     T id;
+    
+    [JsonProperty("firstName")]
     String^ firstName;
+    
+    [JsonProperty("lastName")]
     String^ lastName;
+    
+    [JsonProperty("phoneNumber")]
     String^ phoneNumber;
+    
+    [JsonProperty("birthDate")]
     String^ birthDate;
+    
+    [JsonProperty("email")]
     String^ email;
+    
+    [JsonProperty("address")]
     String^ address;
+    
+    [JsonProperty("notes")]
     String^ notes;
 
 public:

@@ -1,35 +1,44 @@
 # MyNoteBook
 
-A simple contact management application built with C++ and Windows Forms.
+Простое приложение для управления контактами, созданное с использованием C++ и Windows Forms.
 
-## Features
+## Возможности
 
-- Add, edit, and delete contacts
-- Search contacts by various criteria:
-  - First Name
-  - Last Name
-  - Phone Number
+- Добавление, редактирование и удаление контактов
+- Поиск контактов по различным критериям:
+  - Имя
+  - Фамилия
+  - Номер телефона
   - Email
-  - Address
-- Export contacts to Excel
-- Save and load contacts from files
+  - Адрес
+- Экспорт контактов в Excel
+- Сохранение и загрузка контактов из файлов
+- **НОВОЕ:** Поддержка формата JSON для хранения контактов
+  - Автоматическая загрузка контактов из JSON
+  - Улучшенное сохранение данных
+  - Лучшая совместимость с современными приложениями
 
-## Requirements
+## Требования
 
 - Windows OS
-- Visual Studio 2019 or newer
+- Visual Studio 2019 или новее
 - .NET Framework 4.8
+- Библиотека Newtonsoft.Json (включена)
 
-## Build Instructions
+## Инструкции по сборке
 
-1. Open `NBapp.sln` in Visual Studio
-2. Build solution (Ctrl+Shift+B)
-3. Run the application (F5)
+1. Откройте `NBapp.sln` в Visual Studio
+2. Соберите решение (Ctrl+Shift+B)
+3. Запустите приложение (F5)
 
-## Screenshots
+## Поддержка JSON
 
-[Add screenshots here]
+Приложение теперь использует JSON как формат по умолчанию для хранения контактов. При запуске приложение автоматически ищет файл `contacts.json` в директории приложения и загружает контакты из него. При добавлении или удалении контактов изменения автоматически сохраняются в этот файл.
 
-## License
+## Скриншоты
 
-[Your license information] 
+[Добавьте скриншоты здесь]
+
+## Лицензия
+
+[Информация о лицензии] 
