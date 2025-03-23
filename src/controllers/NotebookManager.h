@@ -42,6 +42,14 @@ private:
         }
     };
 
+    // Вспомогательный класс для сортировки по ID
+    ref class IdComparer : IComparer<NotebookEntry<int>^> {
+    public:
+        virtual int Compare(NotebookEntry<int>^ x, NotebookEntry<int>^ y) {
+            return x->GetId() - y->GetId();
+        }
+    };
+
 public:
     // Конструктор
     NotebookManager() {
@@ -167,6 +175,26 @@ public:
     void SortByLastName(bool ascending) {
         LastNameComparer^ comparer = gcnew LastNameComparer(ascending);
         entries->Sort(comparer);
+    }
+    
+    // Сортировка по ID
+    void SortById() {
+        if (entries->Count > 0) {
+            IdComparer^ comparer = gcnew IdComparer();
+            entries->Sort(comparer);
+            // Автоматически сохраняем в JSON после сортировки
+            SaveToJsonFile(defaultJsonPath);
+        }
+    }
+    
+    // Обновление и сортировка контактов
+    bool RefreshAndSortContacts() {
+        if (entries->Count > 0) {
+            // Сортировка по ID
+            SortById();
+            return true;
+        }
+        return false;
     }
     
     // Сохранение в JSON файл

@@ -72,6 +72,7 @@ private:
     System::Windows::Forms::ComboBox^ searchTypeComboBox;
     System::Windows::Forms::Button^ searchButton;
     System::Windows::Forms::Button^ showAllButton;
+    System::Windows::Forms::Button^ refreshButton;
 
     System::Windows::Forms::GroupBox^ addEntryGroupBox;
     System::Windows::Forms::TextBox^ firstNameTextBox;
@@ -184,7 +185,7 @@ private:
 
         this->searchButton = gcnew Button();
         this->searchButton->Text = "Search";
-        this->searchButton->Location = Point(580, 20);
+        this->searchButton->Location = Point(470, 20);
         this->searchButton->Size = System::Drawing::Size(100, 25);
         this->searchButton->Click += gcnew EventHandler(this, &MainForm::SearchButton_Click);
         
@@ -193,6 +194,12 @@ private:
         this->showAllButton->Location = Point(690, 20);
         this->showAllButton->Size = System::Drawing::Size(100, 25);
         this->showAllButton->Click += gcnew EventHandler(this, &MainForm::ShowAllButton_Click);
+        
+        this->refreshButton = gcnew Button();
+        this->refreshButton->Text = "Обновить";
+        this->refreshButton->Location = Point(580, 20);
+        this->refreshButton->Size = System::Drawing::Size(100, 25);
+        this->refreshButton->Click += gcnew EventHandler(this, &MainForm::RefreshButton_Click);
 
         // Инициализация группы добавления записи
         this->addEntryGroupBox = gcnew GroupBox();
@@ -288,6 +295,7 @@ private:
         this->searchGroupBox->Controls->Add(this->searchTextBox);
         this->searchGroupBox->Controls->Add(this->searchButton);
         this->searchGroupBox->Controls->Add(this->showAllButton);
+        this->searchGroupBox->Controls->Add(this->refreshButton);
 
         // Добавление элементов в группу добавления записи
         this->addEntryGroupBox->Controls->Add(firstNameLabel);
@@ -428,6 +436,20 @@ private:
         
         // Обновляем таблицу всеми записями
         RefreshDataGrid();
+    }
+
+    System::Void RefreshButton_Click(System::Object^ sender, System::EventArgs^ e)
+    {
+        // Обновляем и сортируем контакты, если они есть
+        if (manager->RefreshAndSortContacts()) {
+            // Обновляем таблицу отсортированными записями
+            RefreshDataGrid();
+            MessageBox::Show("Список контактов обновлен и отсортирован по ID.", "Информация", 
+                MessageBoxButtons::OK, MessageBoxIcon::Information);
+        } else {
+            MessageBox::Show("Список контактов пуст. Нечего обновлять.", "Информация", 
+                MessageBoxButtons::OK, MessageBoxIcon::Information);
+        }
     }
 
     System::Void NewFile_Click(System::Object^ sender, System::EventArgs^ e)
